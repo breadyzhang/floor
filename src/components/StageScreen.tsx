@@ -43,19 +43,19 @@ export const StageScreen = () => {
   }, [currentPageIndex, totalPages]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-black px-6 py-8 text-white">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-black px-5 py-6 text-white">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
         <header className="flex flex-col gap-1 text-center">
           <p className="text-sm uppercase tracking-[0.4em] text-indigo-300">
             The Floor
           </p>
-          <h1 className="text-3xl font-semibold text-white">
+          <h1 className="text-2xl font-semibold text-white">
             {topic?.name ?? "Loading Round"}
           </h1>
-          <p className="text-sm text-indigo-200">{currentPageLabel}</p>
+          <p className="text-xs text-indigo-200">{currentPageLabel}</p>
         </header>
 
-        <section className="grid w-full gap-5 md:grid-cols-2">
+        <section className="grid w-full gap-4 md:grid-cols-2">
           {(
             Object.entries(players) as Array<
               [PlayerRole, (typeof players)[PlayerRole]]
@@ -67,26 +67,26 @@ export const StageScreen = () => {
             return (
               <div
                 key={role}
-                className={`rounded-3xl border border-white/10 bg-white/10 p-5 shadow-lg transition ${
+                className={`rounded-3xl border border-white/10 bg-white/10 p-4 shadow-lg transition ${
                   isActive ? "border-indigo-300 shadow-indigo-500/30" : ""
                 } ${hasLost ? "opacity-60" : ""}`}
               >
-                <p className="text-[11px] uppercase tracking-[0.35em] text-indigo-200">
+                <p className="text-[10px] uppercase tracking-[0.35em] text-indigo-200">
                   {playerLabels[role]}
                 </p>
                 <div className="mt-3 flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold text-white">
                     {player.name || "—"}
                   </h2>
                   <span
-                    className={`rounded-xl px-4 py-1.5 text-2xl font-mono ${
+                    className={`rounded-xl px-3 py-1 text-xl font-mono ${
                       isActive ? "bg-indigo-500 text-white" : "bg-white/20"
                     }`}
                   >
                     {formatMs(player.remainingMs)}
                   </span>
                 </div>
-                <div className="mt-5 h-2.5 w-full overflow-hidden rounded-full bg-white/20">
+                <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/20">
                   <div
                     className={`h-full transition-[width] duration-150 ${
                       barPercent > 33
@@ -98,7 +98,7 @@ export const StageScreen = () => {
                     style={{ width: `${barPercent}%` }}
                   />
                 </div>
-                <div className="mt-3 flex items-center justify-between text-xs text-indigo-200">
+                <div className="mt-2.5 flex items-center justify-between text-[11px] text-indigo-200">
                   <span>
                     Switches used: {player.switchesUsed} / 3
                   </span>
@@ -114,14 +114,14 @@ export const StageScreen = () => {
         </section>
 
         <main className="flex-1">
-          <div className="mx-auto flex h-full max-w-4xl items-center justify-center rounded-3xl bg-white/90 p-5 shadow-2xl">
+          <div className="mx-auto flex h-full max-w-3xl items-center justify-center rounded-3xl bg-white/90 p-4 shadow-2xl">
             <PdfSlideViewer
               filePath={topic?.filePath ?? null}
               pageIndex={currentPageIndex}
             />
           </div>
           {phase === "complete" && winner && (
-            <div className="mt-3 text-center text-lg font-semibold text-emerald-300">
+            <div className="mt-2 text-center text-base font-semibold text-emerald-300">
               {players[winner].name} wins the round!
             </div>
           )}
