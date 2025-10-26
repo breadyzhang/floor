@@ -1,8 +1,33 @@
 'use client';
 
 import { useEffect, useRef, useState } from "react";
-import { getDocument, type PDFDocumentProxy } from "pdfjs-dist";
-import type { RenderTask } from "pdfjs-dist/types/src/display/api";
+import type {
+  PDFDocumentProxy,
+  RenderTask,
+} from "pdfjs-dist/types/src/display/api";
+
+type PdfModule = typeof import("pdfjs-dist/build/pdf");
+
+let pdfModulePromise: Promise<PdfModule> | null = null;
+
+const getPdfModule = () => {
+  if (typeof window === "undefined") {
+    return Promise.reject(new Error("PDF viewer only available in the browser"));
+  }
+
+  if (!pdfModulePromise) {
+    pdfModulePromise = import("pdfjs-dist/build/pdf").then((module) => {
+      const workerSrc = new URL(
+        "pdfjs-dist/build/pdf.worker.min.mjs",
+        import.meta.url
+      ).toString();
+      module.GlobalWorkerOptions.workerSrc = workerSrc;
+      return module;
+    });
+  }
+
+  return pdfModulePromise;
+};
 
 interface PdfSlideViewerProps {
   filePath: string | null;
@@ -23,17 +48,30 @@ export const PdfSlideViewer = ({
     "idle"
   );
   const [error, setError] = useState<string | null>(null);
-  const [renderSeed, setRenderSeed] = useState(0);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !containerRef.current) {
       return;
     }
-    const handleResize = () => {
-      setRenderSeed((seed) => seed + 1);
+    const updateSize = () => {
+      const width = containerRef.current?.getBoundingClientRect().width ?? 0;
+      setContainerWidth((prev) =>
+        Math.abs(prev - width) > 0.5 ? width : prev
+      );
     };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    updateSize();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateSize);
+      return () => window.removeEventListener("resize", updateSize);
+    }
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(containerRef.current);
+    window.addEventListener("resize", updateSize);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateSize);
+    };
   }, []);
 
   useEffect(() => {
@@ -69,13 +107,17 @@ export const PdfSlideViewer = ({
 
     let cancelled = false;
     let loadedDocument: PDFDocumentProxy | null = null;
-
-    const loadingTask = getDocument({ url: filePath, disableWorker: true });
+    let loadingTask: ReturnType<PdfModule["getDocument"]> | null = null;
 
     const load = async () => {
       try {
         setStatus("loading");
         setError(null);
+        const pdfjs = await getPdfModule();
+        if (cancelled) {
+          return;
+        }
+        loadingTask = pdfjs.getDocument({ url: filePath });
         const pdf = await loadingTask.promise;
         if (cancelled) {
           await pdf.destroy();
@@ -84,7 +126,6 @@ export const PdfSlideViewer = ({
         loadedDocument = pdf;
         setDocumentRef(pdf);
         onPageCount?.(pdf.numPages);
-        setRenderSeed((seed) => seed + 1);
       } catch (err) {
         console.error(err);
         if (!cancelled) {
@@ -103,7 +144,7 @@ export const PdfSlideViewer = ({
         loadedDocument.destroy().catch(() => {
           /* ignore */
         });
-      } else {
+      } else if (loadingTask) {
         loadingTask.destroy().catch(() => {
           /* ignore */
         });
@@ -126,18 +167,32 @@ export const PdfSlideViewer = ({
       }
 
       try {
-        setStatus("loading");
+        setStatus((prev) => (prev === "ready" ? "ready" : "loading"));
         const page = await documentRef.getPage(pageIndex + 1);
         if (cancelled) {
           return;
         }
 
         const baseViewport = page.getViewport({ scale: 1 });
-        const containerWidth =
-          containerRef.current?.clientWidth ?? baseViewport.width;
+        const containerEl = containerRef.current;
+        const rawWidth =
+          containerWidth ||
+          containerEl?.getBoundingClientRect().width ||
+          baseViewport.width;
+        let availableWidth = rawWidth;
+        if (containerEl && typeof window !== "undefined") {
+          const style = window.getComputedStyle(containerEl);
+          const paddingX =
+            parseFloat(style.paddingLeft || "0") +
+            parseFloat(style.paddingRight || "0");
+          availableWidth = Math.max(rawWidth - paddingX, 0);
+        }
+        if (availableWidth === 0) {
+          availableWidth = baseViewport.width;
+        }
         const scale =
-          containerWidth > 0
-            ? containerWidth / baseViewport.width
+          availableWidth > 0
+            ? availableWidth / baseViewport.width
             : window.innerWidth / baseViewport.width;
         const viewport = page.getViewport({ scale: Math.max(scale, 1) });
 
@@ -148,13 +203,14 @@ export const PdfSlideViewer = ({
         }
 
         const outputScale = window.devicePixelRatio || 1;
-        canvas.width = viewport.width * outputScale;
-        canvas.height = viewport.height * outputScale;
-        canvas.style.width = `${viewport.width}px`;
-        canvas.style.height = `${viewport.height}px`;
+        const cssWidth = viewport.width;
+        const cssHeight = viewport.height;
+        canvas.width = Math.floor(cssWidth * outputScale);
+        canvas.height = Math.floor(cssHeight * outputScale);
+        canvas.style.width = "100%";
+        canvas.style.height = "auto";
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.clearRect(0, 0, canvas.width, canvas.height);
-        context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
 
         const renderContext = {
           canvasContext: context,
@@ -188,7 +244,7 @@ export const PdfSlideViewer = ({
         renderTask.cancel();
       }
     };
-  }, [documentRef, pageIndex, renderSeed]);
+  }, [containerWidth, documentRef, pageIndex]);
 
   return (
     <div
