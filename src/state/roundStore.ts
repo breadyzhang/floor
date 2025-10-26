@@ -23,6 +23,7 @@ export interface RoundState {
   activePlayer: PlayerRole | null;
   phase: RoundPhase;
   currentPageIndex: number;
+  pendingPageIndex: number | null;
   totalPages: number;
   resumeAt: number | null;
   lastTickAt: number | null;
@@ -71,6 +72,7 @@ const initialState: RoundState = {
   activePlayer: null,
   phase: "idle",
   currentPageIndex: 0,
+  pendingPageIndex: null,
   totalPages: 0,
   resumeAt: null,
   lastTickAt: null,
@@ -139,6 +141,7 @@ export const selectRoundSnapshot = (
   activePlayer: state.activePlayer,
   phase: state.phase,
   currentPageIndex: state.currentPageIndex,
+  pendingPageIndex: state.pendingPageIndex,
   totalPages: state.totalPages,
   resumeAt: state.resumeAt,
   lastTickAt: state.lastTickAt,
@@ -166,6 +169,7 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
       activePlayer: "challenger",
       phase: "ready",
       currentPageIndex: 0,
+      pendingPageIndex: null,
       totalPages: 0,
       resumeAt: null,
       lastTickAt: null,
@@ -173,11 +177,11 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
       winner: null,
     }));
   },
-  setAnswerKey: (answers) => {
-    set(() => ({
-      answerKey: [...answers],
-    }));
-  },
+    setAnswerKey: (answers) => {
+      set(() => ({
+        answerKey: [...answers],
+      }));
+    },
   startRound: () => {
     set((state) => {
       if (state.phase !== "ready") {
@@ -225,6 +229,7 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
                   afterTick.currentPageIndex + 1,
                   Math.max(afterTick.totalPages - 1, 0)
                 ),
+          pendingPageIndex: null,
           lastTickAt: now,
         };
       });
@@ -281,7 +286,8 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
           winner,
           resumeAt: phase === "passDelay" ? now + PASS_PENALTY_MS : null,
           lastTickAt: null,
-          currentPageIndex: newIndex,
+          pendingPageIndex:
+            phase === "passDelay" ? newIndex : afterTick.pendingPageIndex,
         };
       });
     },
@@ -296,6 +302,9 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
           phase: "running",
           resumeAt: null,
           lastTickAt: now,
+          currentPageIndex:
+            state.pendingPageIndex ?? state.currentPageIndex,
+          pendingPageIndex: null,
         };
       });
     },
@@ -331,6 +340,7 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
             },
           },
           activePlayer: nextRole,
+          pendingPageIndex: null,
           lastTickAt: now,
         };
       });
@@ -344,6 +354,9 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
               phase: "running",
               resumeAt: null,
               lastTickAt: now,
+              currentPageIndex:
+                state.pendingPageIndex ?? state.currentPageIndex,
+              pendingPageIndex: null,
             };
           }
           return state;
@@ -376,6 +389,7 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
             winner: role === "challenger" ? "challengee" : "challenger",
             activePlayer: null,
             lastTickAt: now,
+            pendingPageIndex: null,
           };
         }
 
@@ -400,6 +414,7 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
         activePlayer: snapshot.activePlayer,
         phase: snapshot.phase,
         currentPageIndex: snapshot.currentPageIndex,
+        pendingPageIndex: snapshot.pendingPageIndex,
         totalPages: snapshot.totalPages,
         resumeAt: snapshot.resumeAt,
         lastTickAt: snapshot.lastTickAt,
