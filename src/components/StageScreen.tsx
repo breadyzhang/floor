@@ -13,7 +13,8 @@ const formatMs = (value: number) => {
   const clamped = Math.max(0, Math.floor(value));
   const minutes = Math.floor(clamped / 60_000);
   const seconds = Math.floor((clamped % 60_000) / 1000);
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  const tenths = Math.floor((clamped % 1000) / 100);
+  return `${minutes}:${seconds.toString().padStart(2, "0")}.${tenths}`;
 };
 
 const toPercentRemaining = (value: number) =>
@@ -79,7 +80,7 @@ export const StageScreen = () => {
                     {player.name || "—"}
                   </h2>
                   <span
-                    className={`rounded-xl px-3 py-1 text-xl font-mono ${
+                    className={`rounded-xl px-3 py-1 text-xl font-mono tabular-nums ${
                       isActive ? "bg-indigo-500 text-white" : "bg-white/20"
                     }`}
                   >
