@@ -1,0 +1,39 @@
+GOOGLE SLIDES: AUTO-BUILD BLANK DECK (ANSWERS IN SPEAKER NOTES)
+
+GOAL
+Create a Google Slides deck of blank slides for {TOPIC}. Do NOT place any content on slides. For each slide, add the canonical answer in that slide’s Speaker Notes.
+
+CONSTRAINTS
+- TEMPLATE/LAYOUT: NEVER change the template. ALWAYS use the **Blank** layout.
+- NO ON-SLIDE CONTENT: Do not insert images, text boxes, shapes, or backgrounds—slides must remain completely empty.
+- Speaker Notes are allowed and required.
+
+INPUTS
+- {TOPIC} (required): e.g., “major US city”, “US national park”, “car brand”.
+- {ITEM-LIST} (optional): newline- or comma-separated list of canonical item names for {TOPIC}. If provided, make one slide per item in order. If omitted, create 20 slides using diverse examples you select.
+
+SLIDE COUNT
+- With {ITEM-LIST}: number of items.
+- Without {ITEM-LIST}: 20.
+
+PROCESS
+1) Open (or create) the target Google Slides deck.
+2) Ensure the current layout is **Blank**. If the “+” button does not produce a Blank slide, set **Blank** once, then proceed.
+3) Build the working list:
+   - If {ITEM-LIST} provided: split (trim whitespace) to form the exact ordered list.
+   - Else: generate 20 diverse, representative examples of {TOPIC}.
+4) For each item in the list:
+   a. Click “+” (top-left) to insert a new **Blank** slide.
+   b. Do NOT add any content to the slide.
+   c. Add **Speaker Notes**: `Answer: <ITEM>` (use the item’s canonical name).
+
+COMPLETION CHECK
+- Slide count equals `len({ITEM-LIST})` (if provided) or `20` (if not).
+- Every slide uses the **Blank** layout (template unchanged).
+- No on-slide content exists on any slide.
+- **Speaker Notes** are present on every slide with `Answer: <ITEM>`.
+
+REQUIRED FIELDS TO EDIT BEFORE RUNNING
+- {TOPIC} = __________________________________
+- {ITEM-LIST} (optional; paste list here, newline or comma separated) =
+__________________________________________________

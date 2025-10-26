@@ -1,0 +1,53 @@
+GOOGLE SLIDES: AUTO-BUILD IMAGE DECK (WITH OPTIONAL PRESET LIST)
+
+GOAL
+Create a Google Slides deck where each slide shows exactly one image representing an example of {TOPIC}. If {ITEM-LIST} is provided, create one slide per item in that list (in order). If {ITEM-LIST} is not provided, create 20 slides using diverse, representative examples of {TOPIC}. For each slide, write the correct answer (the example’s canonical name) in that slide’s Speaker Notes.
+
+CONSTRAINTS
+- TEMPLATE/LAYOUT: NEVER change the template. ALWAYS ensure each slide’s layout is **Blank**.
+- Layout: No titles or text boxes on the slide itself.
+- Placement: After inserting an image, do NOT resize, move, crop, or format it—accept Google Slides’ default placement.
+- Content: Exactly one image per slide. No extra elements (no captions, shapes, borders, or backgrounds).
+- Image Source: Use the right-hand **Stock & Web** sidebar (right toolbar, **4th icon from the top**). In that sidebar, select the **Google Images** section (NOT “Stock images”).
+- Speaker Notes are allowed and required; slides themselves must remain text-free.
+
+INPUTS
+- {TOPIC} (required): The category, e.g., “major US city”, “US national park”, “car brand”.
+- {ITEM-LIST} (optional): A newline- or comma-separated list of canonical item names for {TOPIC}. If present, use these items exactly as provided and in order.
+
+SLIDE COUNT
+- If {ITEM-LIST} is provided: SLIDES = number of items in {ITEM-LIST}.
+- Else: SLIDES = 20.
+
+PROCESS
+1) Open (or create) the target Google Slides deck.
+2) Confirm the current slide layout is **Blank**. If clicking “+” doesn’t produce a Blank slide, set **Blank** once, then proceed.
+3) Build the working item set:
+   - If {ITEM-LIST} provided: split into items (trim whitespace); this is the exact ordered list.
+   - Else: generate a list of 20 diverse, representative examples of {TOPIC} (avoid near-duplicates).
+4) For each item in the working list:
+   a. Click the “+” (top-left) to insert a new **Blank** slide.
+   b. Open the **Stock & Web** sidebar (right toolbar, 4th icon from top). In the sidebar, click **Google Images** (NOT “Stock images”).
+   c. Search using the item’s name; if ambiguous, append {TOPIC} (e.g., “{ITEM} {TOPIC}”).
+   d. Click exactly one suitable, high-quality image (prefer landscape). Insert it.
+   e. Do NOT adjust the image after insertion.
+   f. Add **Speaker Notes** for this slide: `Answer: <ITEM>` (use the canonical item name).
+5) If no suitable image appears:
+   - Try a closely related term (e.g., a prominent landmark or synonym tied to the same item).
+   - If still unavailable: choose a different, distinct example of {TOPIC}; set Speaker Notes to that chosen example’s canonical name.
+
+COMPLETION CHECK
+- Slide count equals:
+  - `len({ITEM-LIST})` when provided; OR
+  - `20` when {ITEM-LIST} is omitted.
+- Every slide uses the **Blank** layout (template unchanged).
+- Exactly one image is inserted on each slide.
+- No titles, shapes, captions, or other elements on slides.
+- No image was resized, moved, cropped, or formatted after insertion.
+- **Speaker Notes** exist on every slide with `Answer: <ITEM>`.
+- Images are diverse and clearly represent their items/{TOPIC}.
+
+REQUIRED FIELDS TO EDIT BEFORE RUNNING
+- {TOPIC} = __________________________________
+- {ITEM-LIST} (optional; paste list here, newline or comma separated) =
+__________________________________________________
