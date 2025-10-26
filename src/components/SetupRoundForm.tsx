@@ -121,14 +121,31 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
         )}
       </label>
 
-      <button
-        type="button"
-        onClick={handleStart}
-        disabled={!canStart}
-        className="h-14 rounded-2xl bg-indigo-600 text-lg font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-zinc-300"
-      >
-        Start Round
-      </button>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <button
+          type="button"
+          onClick={handleStart}
+          disabled={!canStart}
+          className="h-14 flex-1 rounded-2xl bg-indigo-600 text-lg font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-zinc-300"
+        >
+          Start Round
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.open(
+                "/stage",
+                "the-floor-stage",
+                "noopener=yes,width=1280,height=720"
+              );
+            }
+          }}
+          className="h-14 flex-1 rounded-2xl border border-indigo-200 bg-indigo-50 text-sm font-semibold text-indigo-700 transition hover:border-indigo-300 hover:bg-indigo-100"
+        >
+          Open Stage Display
+        </button>
+      </div>
 
       <aside className="rounded-2xl bg-indigo-50 px-6 py-5 text-sm text-indigo-800">
         <strong className="font-semibold">Hotkeys</strong>:{" "}
