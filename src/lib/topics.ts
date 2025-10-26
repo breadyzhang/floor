@@ -13,17 +13,33 @@ export const getAvailableTopics = async (): Promise<TopicSelection[]> => {
   const topicsDir = path.join(process.cwd(), "public", "topics");
   try {
     const entries = await fs.readdir(topicsDir, { withFileTypes: true });
-    return entries
-      .filter(
-        (entry) =>
-          entry.isFile() && entry.name.toLowerCase().endsWith(".pdf")
-      )
-      .map<TopicSelection>((entry) => ({
-        id: entry.name.toLowerCase(),
-        name: toDisplayName(entry.name),
-        filePath: `/topics/${entry.name}`,
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    const topics = await Promise.all(
+      entries
+        .filter(
+          (entry) =>
+            entry.isFile() && entry.name.toLowerCase().endsWith(".pdf")
+        )
+        .map(async (entry) => {
+          const baseName = entry.name.replace(/\.pdf$/i, "");
+          const answerFilename = `${baseName}.json`;
+          const candidatePath = path.join(topicsDir, answerFilename);
+          let answerPath: string | undefined;
+          try {
+            await fs.access(candidatePath);
+            answerPath = `/topics/${answerFilename}`;
+          } catch {
+            answerPath = undefined;
+          }
+          return {
+            id: entry.name.toLowerCase(),
+            name: toDisplayName(entry.name),
+            filePath: `/topics/${entry.name}`,
+            answerPath,
+          } satisfies TopicSelection;
+        })
+    );
+
+    return topics.sort((a, b) => a.name.localeCompare(b.name));
   } catch {
     return [];
   }

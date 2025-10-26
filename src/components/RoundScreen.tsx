@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { PdfSlideViewer } from "@/components/PdfSlideViewer";
 import { useKeyboardControls } from "@/hooks/useKeyboardControls";
 import { useRoundClock } from "@/hooks/useRoundClock";
+import { useRoundSync } from "@/hooks/useRoundSync";
 import {
   MAX_SWITCHES_PER_PLAYER,
   PASS_PENALTY_MS,
@@ -42,6 +43,8 @@ export const RoundScreen = () => {
   const activePlayer = useRoundStore((state) => state.activePlayer);
   const resumeAt = useRoundStore((state) => state.resumeAt);
   const winner = useRoundStore((state) => state.winner);
+  const answerKey = useRoundStore((state) => state.answerKey);
+  const setAnswerKey = useRoundStore((state) => state.setAnswerKey);
   const markCorrect = useRoundStore((state) => state.markCorrect);
   const passQuestion = useRoundStore((state) => state.passQuestion);
   const switchTurn = useRoundStore((state) => state.switchTurn);
@@ -50,9 +53,66 @@ export const RoundScreen = () => {
   const resetRound = useRoundStore((state) => state.resetRound);
 
   const [timestamp, setTimestamp] = useState(() => Date.now());
+  const [stageWindow, setStageWindow] = useState<Window | null>(null);
 
+  useRoundSync("host");
   useRoundClock();
   useKeyboardControls({ enabled: phase === "running" });
+
+  useEffect(() => {
+    if (!stageWindow) {
+      return undefined;
+    }
+    const watcher = window.setInterval(() => {
+      if (stageWindow.closed) {
+        setStageWindow(null);
+      }
+    }, 2000);
+    return () => window.clearInterval(watcher);
+  }, [stageWindow]);
+
+  useEffect(() => {
+    if (!topic?.answerPath) {
+      setAnswerKey([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadAnswers = async () => {
+      try {
+        const response = await fetch(topic.answerPath);
+        if (!response.ok) {
+          throw new Error("answer manifest missing");
+        }
+        const data = await response.json();
+        if (cancelled) {
+          return;
+        }
+        const answers = Array.isArray(data)
+          ? data
+          : Array.isArray(data.answers)
+          ? data.answers
+          : [];
+        setAnswerKey(
+          answers.map((entry) =>
+            typeof entry === "string" ? entry : JSON.stringify(entry)
+          )
+        );
+      } catch (error) {
+        console.warn("No answer key for", topic.answerPath, error);
+        if (!cancelled) {
+          setAnswerKey([]);
+        }
+      }
+    };
+
+    loadAnswers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [topic?.answerPath, setAnswerKey]);
 
   useEffect(() => {
     if (phase === "ready" && totalPages > 0) {
@@ -109,6 +169,24 @@ export const RoundScreen = () => {
     router.push("/");
   };
 
+  const handleLaunchStage = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const existing = stageWindow && !stageWindow.closed ? stageWindow : null;
+    const opened =
+      existing ??
+      window.open(
+        "/stage",
+        "the-floor-stage",
+        "noopener=yes,width=1280,height=720"
+      );
+    opened?.focus();
+    if (opened && opened !== existing) {
+      setStageWindow(opened);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col gap-6 bg-gradient-to-br from-blue-900 via-gray-900 to-black px-6 py-10 text-white">
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -121,13 +199,22 @@ export const RoundScreen = () => {
           </h1>
           <p className="text-sm text-indigo-200">{currentPageLabel}</p>
         </div>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="self-start rounded-2xl border border-white/40 px-5 py-2 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10"
-        >
-          Back to setup
-        </button>
+        <div className="flex flex-col gap-3 self-start sm:flex-row md:self-auto">
+          <button
+            type="button"
+            onClick={handleLaunchStage}
+            className="rounded-2xl border border-indigo-300/60 px-5 py-2 text-sm font-semibold text-indigo-100 transition hover:border-indigo-200 hover:bg-indigo-500/20"
+          >
+            Launch stage display
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="rounded-2xl border border-white/40 px-5 py-2 text-sm font-semibold text-white transition hover:border-white hover:bg-white/10"
+          >
+            Back to setup
+          </button>
+        </div>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2">
@@ -233,6 +320,16 @@ export const RoundScreen = () => {
             {phase === "complete" && winner && (
               <div className="rounded-2xl bg-emerald-500/20 px-4 py-3 text-sm text-emerald-100">
                 {players[winner].name} wins the round!
+              </div>
+            )}
+            {answerKey.length > 0 && (
+              <div className="rounded-2xl bg-white/10 px-4 py-3 text-sm text-indigo-100">
+                <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">
+                  Host answer
+                </p>
+                <p className="pt-1 text-base font-semibold text-white">
+                  {answerKey[currentPageIndex] ?? "—"}
+                </p>
               </div>
             )}
           </div>

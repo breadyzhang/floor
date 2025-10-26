@@ -10,6 +10,37 @@ type PdfModule = typeof import("pdfjs-dist/build/pdf");
 
 let pdfModulePromise: Promise<PdfModule> | null = null;
 
+type CachedDocument = {
+  promise: Promise<PDFDocumentProxy>;
+  refCount: number;
+};
+
+const documentCache = new Map<string, CachedDocument>();
+const acquirePdfDocument = async (url: string) => {
+  const cached = documentCache.get(url);
+  if (cached) {
+    cached.refCount += 1;
+    return cached.promise;
+  }
+
+  const promise = getPdfModule().then((pdfjs) =>
+    pdfjs.getDocument({ url }).promise
+  );
+  documentCache.set(url, { promise, refCount: 1 });
+  return promise;
+};
+
+const releasePdfDocument = (url: string) => {
+  const cached = documentCache.get(url);
+  if (!cached) {
+    return;
+  }
+  cached.refCount -= 1;
+  if (cached.refCount <= 0) {
+    cached.refCount = 0;
+  }
+};
+
 const getPdfModule = () => {
   if (typeof window === "undefined") {
     return Promise.reject(new Error("PDF viewer only available in the browser"));
@@ -106,24 +137,16 @@ export const PdfSlideViewer = ({
     }
 
     let cancelled = false;
-    let loadedDocument: PDFDocumentProxy | null = null;
-    let loadingTask: ReturnType<PdfModule["getDocument"]> | null = null;
 
     const load = async () => {
       try {
-        setStatus("loading");
+        setStatus((current) => (current === "ready" ? current : "loading"));
         setError(null);
-        const pdfjs = await getPdfModule();
+        const pdf = await acquirePdfDocument(filePath);
         if (cancelled) {
+          releasePdfDocument(filePath);
           return;
         }
-        loadingTask = pdfjs.getDocument({ url: filePath });
-        const pdf = await loadingTask.promise;
-        if (cancelled) {
-          await pdf.destroy();
-          return;
-        }
-        loadedDocument = pdf;
         setDocumentRef(pdf);
         onPageCount?.(pdf.numPages);
       } catch (err) {
@@ -140,15 +163,7 @@ export const PdfSlideViewer = ({
 
     return () => {
       cancelled = true;
-      if (loadedDocument) {
-        loadedDocument.destroy().catch(() => {
-          /* ignore */
-        });
-      } else if (loadingTask) {
-        loadingTask.destroy().catch(() => {
-          /* ignore */
-        });
-      }
+      releasePdfDocument(filePath);
     };
   }, [filePath, onPageCount]);
 
@@ -228,6 +243,25 @@ export const PdfSlideViewer = ({
           setStatus("ready");
         }
       } catch (err) {
+        if (
+          err &&
+          typeof err === "object" &&
+          "message" in err &&
+          (err as { message?: string }).message?.includes("Transport destroyed")
+        ) {
+          if (!cancelled) {
+            setStatus((current) => (current === "ready" ? current : "loading"));
+          }
+          return;
+        }
+        if (
+          err &&
+          typeof err === "object" &&
+          "name" in err &&
+          (err as { name?: string }).name === "RenderingCancelledException"
+        ) {
+          return;
+        }
         console.error(err);
         if (!cancelled) {
           setStatus("error");

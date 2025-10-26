@@ -6,6 +6,7 @@ export interface TopicSelection {
   id: string;
   name: string;
   filePath: string; // e.g. /topics/math.pdf
+  answerPath?: string;
 }
 
 export interface PlayerState {
@@ -25,6 +26,7 @@ export interface RoundState {
   totalPages: number;
   resumeAt: number | null;
   lastTickAt: number | null;
+  answerKey: string[];
   winner: PlayerRole | null;
 }
 
@@ -34,6 +36,7 @@ export interface RoundActions {
     challengeeName: string;
     topic: TopicSelection;
   }) => void;
+  setAnswerKey: (answers: string[]) => void;
   startRound: () => void;
   setTotalPages: (pages: number) => void;
   markCorrect: () => void;
@@ -41,6 +44,7 @@ export interface RoundActions {
   resumeAfterDelay: () => void;
   switchTurn: () => void;
   tick: (now: number) => void;
+  hydrateFromSnapshot: (snapshot: RoundSnapshot) => void;
   resetRound: () => void;
 }
 
@@ -70,6 +74,7 @@ const initialState: RoundState = {
   totalPages: 0,
   resumeAt: null,
   lastTickAt: null,
+  answerKey: [],
   winner: null,
 };
 
@@ -119,12 +124,34 @@ const applyTimeDeduction = (
   };
 };
 
-export const useRoundStore = create<RoundState & RoundActions>()((set) => ({
-    ...initialState,
-    configureRound: ({ challengerName, challengeeName, topic }) => {
-      set(() => ({
-        topic,
-        players: {
+export type RoundSnapshot = RoundState;
+
+const clonePlayers = (players: Record<PlayerRole, PlayerState>) => ({
+  challenger: { ...players.challenger },
+  challengee: { ...players.challengee },
+});
+
+export const selectRoundSnapshot = (
+  state: RoundState & RoundActions
+): RoundSnapshot => ({
+  topic: state.topic,
+  players: clonePlayers(state.players),
+  activePlayer: state.activePlayer,
+  phase: state.phase,
+  currentPageIndex: state.currentPageIndex,
+  totalPages: state.totalPages,
+  resumeAt: state.resumeAt,
+  lastTickAt: state.lastTickAt,
+  answerKey: [...state.answerKey],
+  winner: state.winner,
+});
+
+export const useRoundStore = create<RoundState & RoundActions>()((set, get) => ({
+  ...initialState,
+  configureRound: ({ challengerName, challengeeName, topic }) => {
+    set(() => ({
+      topic,
+      players: {
           challenger: {
             name: challengerName,
             remainingMs: ROUND_DURATION_MS,
@@ -134,22 +161,28 @@ export const useRoundStore = create<RoundState & RoundActions>()((set) => ({
             name: challengeeName,
             remainingMs: ROUND_DURATION_MS,
             switchesUsed: 0,
-          },
         },
-        activePlayer: "challenger",
-        phase: "ready",
-        currentPageIndex: 0,
-        totalPages: 0,
-        resumeAt: null,
-        lastTickAt: null,
-        winner: null,
-      }));
-    },
-    startRound: () => {
-      set((state) => {
-        if (state.phase !== "ready") {
-          return state;
-        }
+      },
+      activePlayer: "challenger",
+      phase: "ready",
+      currentPageIndex: 0,
+      totalPages: 0,
+      resumeAt: null,
+      lastTickAt: null,
+      answerKey: [],
+      winner: null,
+    }));
+  },
+  setAnswerKey: (answers) => {
+    set(() => ({
+      answerKey: [...answers],
+    }));
+  },
+  startRound: () => {
+    set((state) => {
+      if (state.phase !== "ready") {
+        return state;
+      }
         const now = Date.now();
         return {
           ...state,
@@ -359,4 +392,22 @@ export const useRoundStore = create<RoundState & RoundActions>()((set) => ({
         players: initialPlayers(),
       }));
     },
-  }));
+    hydrateFromSnapshot: (snapshot) => {
+      const current = get();
+      set(() => ({
+        topic: snapshot.topic,
+        players: clonePlayers(snapshot.players),
+        activePlayer: snapshot.activePlayer,
+        phase: snapshot.phase,
+        currentPageIndex: snapshot.currentPageIndex,
+        totalPages: snapshot.totalPages,
+        resumeAt: snapshot.resumeAt,
+        lastTickAt: snapshot.lastTickAt,
+        answerKey: current.answerKey.length > 0 ? current.answerKey : [...snapshot.answerKey],
+        winner: snapshot.winner,
+      }));
+    },
+}));
+
+export const getRoundSnapshot = (): RoundSnapshot =>
+  selectRoundSnapshot(useRoundStore.getState());
