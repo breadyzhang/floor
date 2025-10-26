@@ -271,11 +271,15 @@ export const RoundScreen = () => {
                 <span>
                   Switches used: {player.switchesUsed} / {MAX_SWITCHES_PER_PLAYER}
                 </span>
-                {isActive && (
+                {phase === "passDelay" && activePlayer === role && resumeAt ? (
+                  <span className="font-semibold uppercase tracking-wide text-rose-200">
+                    Penalty {(passCountdown / 1000).toFixed(1)}s
+                  </span>
+                ) : isActive ? (
                   <span className="font-semibold uppercase tracking-wide">
                     Active player
                   </span>
-                )}
+                ) : null}
               </div>
             </div>
           );
@@ -315,12 +319,6 @@ export const RoundScreen = () => {
                 Switch (remaining {switchesRemaining})
               </button>
             </div>
-            {phase === "passDelay" && passCountdown > 0 && (
-              <div className="rounded-2xl bg-rose-500/20 px-4 py-3 text-sm text-rose-100">
-                Pass penalty in effect · next question in{" "}
-                {(passCountdown / 1000).toFixed(1)}s
-              </div>
-            )}
             {phase === "complete" && winner && (
               <div className="rounded-2xl bg-emerald-500/20 px-4 py-3 text-sm text-emerald-100">
                 {players[winner].name} wins the round!

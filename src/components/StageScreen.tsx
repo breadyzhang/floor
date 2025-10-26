@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PdfSlideViewer } from "@/components/PdfSlideViewer";
 import { useRoundSync } from "@/hooks/useRoundSync";
 import {
@@ -35,6 +35,9 @@ export const StageScreen = () => {
   const totalPages = useRoundStore((state) => state.totalPages);
   const winner = useRoundStore((state) => state.winner);
   const phase = useRoundStore((state) => state.phase);
+  const resumeAt = useRoundStore((state) => state.resumeAt);
+
+  const [timestamp, setTimestamp] = useState(() => Date.now());
 
   const currentPageLabel = useMemo(() => {
     if (totalPages === 0) {
@@ -42,6 +45,27 @@ export const StageScreen = () => {
     }
     return `Question ${currentPageIndex + 1} of ${totalPages}`;
   }, [currentPageIndex, totalPages]);
+
+  useEffect(() => {
+    if (phase !== "passDelay" || !resumeAt) {
+      return undefined;
+    }
+    const frameId = window.requestAnimationFrame(() => {
+      setTimestamp(Date.now());
+    });
+    const intervalId = window.setInterval(() => {
+      setTimestamp(Date.now());
+    }, 50);
+    return () => {
+      window.clearInterval(intervalId);
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [phase, resumeAt]);
+
+  const passCountdown =
+    phase === "passDelay" && resumeAt
+      ? Math.max(0, resumeAt - timestamp)
+      : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-slate-900 to-black px-5 py-6 text-white">
@@ -103,11 +127,15 @@ export const StageScreen = () => {
                   <span>
                     Switches used: {player.switchesUsed} / 3
                   </span>
-                  {isActive && (
+                  {phase === "passDelay" && activePlayer === role && resumeAt ? (
+                    <span className="font-semibold uppercase tracking-wide text-rose-200">
+                      Penalty {(passCountdown / 1000).toFixed(1)}s
+                    </span>
+                  ) : isActive ? (
                     <span className="font-semibold uppercase tracking-wide text-indigo-100">
                       Active
                     </span>
-                  )}
+                  ) : null}
                 </div>
               </div>
             );
