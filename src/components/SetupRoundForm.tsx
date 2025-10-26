@@ -1,0 +1,142 @@
+'use client';
+
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { TopicSelection } from "../state/roundStore";
+import { useRoundStore } from "../state/roundStore";
+
+interface SetupRoundFormProps {
+  topics: TopicSelection[];
+}
+
+export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
+  const router = useRouter();
+  const configureRound = useRoundStore((state) => state.configureRound);
+  const resetRound = useRoundStore((state) => state.resetRound);
+
+  const [challengerName, setChallengerName] = useState("");
+  const [challengeeName, setChallengeeName] = useState("");
+  const [topicId, setTopicId] = useState(() => topics[0]?.id ?? "");
+
+  const topicsById = useMemo(
+    () => new Map(topics.map((topic) => [topic.id, topic])),
+    [topics]
+  );
+
+  const selectedTopicId = topicsById.has(topicId) ? topicId : "";
+
+  useEffect(() => {
+    resetRound();
+  }, [resetRound]);
+
+  const canStart =
+    challengerName.trim().length > 0 &&
+    challengeeName.trim().length > 0 &&
+    topicsById.has(selectedTopicId);
+
+  const handleStart = () => {
+    if (!canStart) {
+      return;
+    }
+    const topic = topicsById.get(selectedTopicId)!;
+    configureRound({
+      challengerName: challengerName.trim(),
+      challengeeName: challengeeName.trim(),
+      topic,
+    });
+    router.push("/round");
+  };
+
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-10 rounded-3xl bg-white/80 p-12 shadow-xl backdrop-blur-md ring-1 ring-zinc-200">
+      <header className="space-y-3 text-center">
+        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-indigo-600">
+          The Floor
+        </p>
+        <h1 className="text-4xl font-semibold text-zinc-900">
+          Launch a Head-to-Head Round
+        </h1>
+        <p className="text-base text-zinc-600">
+          Enter each contestant and pick a topic deck (PDF exported from your
+          slides). You can add new decks to{" "}
+          <code className="rounded bg-zinc-100 px-2 py-1 text-sm">
+            public/topics
+          </code>{" "}
+          at any time.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-zinc-700">
+            Challenger Name
+          </span>
+          <input
+            type="text"
+            value={challengerName}
+            onChange={(event) => setChallengerName(event.target.value)}
+            placeholder="e.g. Taylor Swift"
+            className="h-12 rounded-xl border border-zinc-200 px-4 text-base text-zinc-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+          />
+        </label>
+
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-zinc-700">
+            Challengee Name
+          </span>
+          <input
+            type="text"
+            value={challengeeName}
+            onChange={(event) => setChallengeeName(event.target.value)}
+            placeholder="e.g. Travis Kelce"
+            className="h-12 rounded-xl border border-zinc-200 px-4 text-base text-zinc-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+          />
+        </label>
+      </div>
+
+      <label className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-zinc-700">
+          Topic Deck (PDF in <code>public/topics</code>)
+        </span>
+        <select
+          value={selectedTopicId}
+          onChange={(event) => setTopicId(event.target.value)}
+          className="h-12 rounded-xl border border-zinc-200 px-4 text-base text-zinc-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+        >
+          {topics.length === 0 ? (
+            <option value="">No topics detected</option>
+          ) : (
+            topics.map((topic) => (
+              <option key={topic.id} value={topic.id}>
+                {topic.name}
+              </option>
+            ))
+          )}
+        </select>
+        {topics.length === 0 && (
+          <p className="text-sm text-amber-600">
+            Drop exported PDF decks into <code>public/topics</code> and refresh
+            this page.
+          </p>
+        )}
+      </label>
+
+      <button
+        type="button"
+        onClick={handleStart}
+        disabled={!canStart}
+        className="h-14 rounded-2xl bg-indigo-600 text-lg font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-zinc-300"
+      >
+        Start Round
+      </button>
+
+      <aside className="rounded-2xl bg-indigo-50 px-6 py-5 text-sm text-indigo-800">
+        <strong className="font-semibold">Hotkeys</strong>:{" "}
+        <code className="font-medium">J</code> next question / correct answer,{" "}
+        <code className="font-medium">P</code> pass (−3s penalty),{" "}
+        <code className="font-medium">S</code> switch (3 per player). Buttons on
+        the round screen trigger the same actions.
+      </aside>
+    </div>
+  );
+};

@@ -1,0 +1,44 @@
+import { useEffect } from "react";
+import { useRoundStore } from "../state/roundStore";
+
+type ControlConfig = {
+  enabled: boolean;
+};
+
+export const useKeyboardControls = ({ enabled }: ControlConfig) => {
+  const markCorrect = useRoundStore((state) => state.markCorrect);
+  const passQuestion = useRoundStore((state) => state.passQuestion);
+  const switchTurn = useRoundStore((state) => state.switchTurn);
+
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat) {
+        return;
+      }
+
+      switch (event.code) {
+        case "KeyJ":
+          event.preventDefault();
+          markCorrect();
+          break;
+        case "KeyP":
+          event.preventDefault();
+          passQuestion();
+          break;
+        case "KeyS":
+          event.preventDefault();
+          switchTurn();
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [enabled, markCorrect, passQuestion, switchTurn]);
+};
