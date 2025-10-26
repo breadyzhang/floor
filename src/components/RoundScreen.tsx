@@ -44,7 +44,11 @@ export const RoundScreen = () => {
   const resumeAt = useRoundStore((state) => state.resumeAt);
   const winner = useRoundStore((state) => state.winner);
   const answerKey = useRoundStore((state) => state.answerKey);
+  const showAnswer = useRoundStore((state) => state.showAnswer);
   const setAnswerKey = useRoundStore((state) => state.setAnswerKey);
+  const toggleAnswerVisibility = useRoundStore(
+    (state) => state.toggleAnswerVisibility
+  );
   const markCorrect = useRoundStore((state) => state.markCorrect);
   const passQuestion = useRoundStore((state) => state.passQuestion);
   const switchTurn = useRoundStore((state) => state.switchTurn);
@@ -324,11 +328,20 @@ export const RoundScreen = () => {
             )}
             {answerKey.length > 0 && (
               <div className="rounded-2xl bg-white/10 px-4 py-3 text-sm text-indigo-100">
-                <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">
-                  Host answer
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">
+                    Host answer
+                  </p>
+                  <button
+                    type="button"
+                    onClick={toggleAnswerVisibility}
+                    className="rounded-xl border border-indigo-200/40 px-2 py-1 text-[11px] font-medium text-indigo-100 transition hover:border-indigo-100 hover:bg-indigo-400/20"
+                  >
+                    {showAnswer ? "Hide (H)" : "Show (H)"}
+                  </button>
+                </div>
                 <p className="pt-1 text-base font-semibold text-white">
-                  {answerKey[currentPageIndex] ?? "—"}
+                  {showAnswer ? answerKey[currentPageIndex] ?? "—" : "—"}
                 </p>
               </div>
             )}

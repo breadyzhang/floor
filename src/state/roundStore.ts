@@ -38,6 +38,7 @@ export interface RoundActions {
     topic: TopicSelection;
   }) => void;
   setAnswerKey: (answers: string[]) => void;
+  toggleAnswerVisibility: () => void;
   startRound: () => void;
   setTotalPages: (pages: number) => void;
   markCorrect: () => void;
@@ -77,6 +78,7 @@ const initialState: RoundState = {
   resumeAt: null,
   lastTickAt: null,
   answerKey: [],
+  showAnswer: true,
   winner: null,
 };
 
@@ -171,15 +173,21 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
       currentPageIndex: 0,
       pendingPageIndex: null,
       totalPages: 0,
-      resumeAt: null,
-      lastTickAt: null,
-      answerKey: [],
-      winner: null,
-    }));
-  },
+        resumeAt: null,
+        lastTickAt: null,
+        answerKey: [],
+        showAnswer: true,
+        winner: null,
+      }));
+    },
     setAnswerKey: (answers) => {
       set(() => ({
         answerKey: [...answers],
+      }));
+    },
+    toggleAnswerVisibility: () => {
+      set((state) => ({
+        showAnswer: !state.showAnswer,
       }));
     },
   startRound: () => {
@@ -419,6 +427,7 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
         resumeAt: snapshot.resumeAt,
         lastTickAt: snapshot.lastTickAt,
         answerKey: current.answerKey.length > 0 ? current.answerKey : [...snapshot.answerKey],
+        showAnswer: snapshot.showAnswer,
         winner: snapshot.winner,
       }));
     },

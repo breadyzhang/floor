@@ -9,6 +9,9 @@ export const useKeyboardControls = ({ enabled }: ControlConfig) => {
   const markCorrect = useRoundStore((state) => state.markCorrect);
   const passQuestion = useRoundStore((state) => state.passQuestion);
   const switchTurn = useRoundStore((state) => state.switchTurn);
+  const toggleAnswerVisibility = useRoundStore(
+    (state) => state.toggleAnswerVisibility
+  );
 
   useEffect(() => {
     if (!enabled) {
@@ -33,6 +36,10 @@ export const useKeyboardControls = ({ enabled }: ControlConfig) => {
           event.preventDefault();
           switchTurn();
           break;
+        case "KeyH":
+          event.preventDefault();
+          toggleAnswerVisibility();
+          break;
         default:
           break;
       }
@@ -40,5 +47,5 @@ export const useKeyboardControls = ({ enabled }: ControlConfig) => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [enabled, markCorrect, passQuestion, switchTurn]);
+  }, [enabled, markCorrect, passQuestion, switchTurn, toggleAnswerVisibility]);
 };
