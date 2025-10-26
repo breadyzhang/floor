@@ -75,7 +75,7 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
             type="text"
             value={challengerName}
             onChange={(event) => setChallengerName(event.target.value)}
-            placeholder="e.g. Taylor Swift"
+            placeholder="e.g. billy"
             className="h-12 rounded-xl border border-zinc-200 px-4 text-base text-zinc-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
           />
         </label>
@@ -88,7 +88,7 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
             type="text"
             value={challengeeName}
             onChange={(event) => setChallengeeName(event.target.value)}
-            placeholder="e.g. Travis Kelce"
+            placeholder="e.g. bob"
             className="h-12 rounded-xl border border-zinc-200 px-4 text-base text-zinc-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
           />
         </label>
