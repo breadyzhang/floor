@@ -438,7 +438,6 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
       }));
     },
     hydrateFromSnapshot: (snapshot) => {
-      const current = get();
       set(() => ({
         topic: snapshot.topic,
         players: clonePlayers(snapshot.players),
@@ -449,8 +448,9 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
         totalPages: snapshot.totalPages,
         resumeAt: snapshot.resumeAt,
         lastTickAt: snapshot.lastTickAt,
-        answerKey: current.answerKey.length > 0 ? current.answerKey : [...snapshot.answerKey],
+        answerKey: [...snapshot.answerKey],
         showAnswer: snapshot.showAnswer,
+        roundDurationMs: snapshot.roundDurationMs,
         winner: snapshot.winner,
       }));
     },
