@@ -9,7 +9,6 @@ import { useRoundSync } from "@/hooks/useRoundSync";
 import {
   MAX_SWITCHES_PER_PLAYER,
   PASS_PENALTY_MS,
-  ROUND_DURATION_MS,
   type PlayerRole,
   useRoundStore,
 } from "@/state/roundStore";
@@ -24,8 +23,8 @@ const formatMs = (value: number) => {
   return `${minPart}:${secPart}.${tenths}`;
 };
 
-const toPercentRemaining = (value: number) =>
-  Math.max(0, Math.min(100, (value / ROUND_DURATION_MS) * 100));
+const toPercentRemaining = (value: number, total: number) =>
+  Math.max(0, Math.min(100, total > 0 ? (value / total) * 100 : 0));
 
 const playerLabels: Record<PlayerRole, string> = {
   challenger: "Challenger",
@@ -45,6 +44,7 @@ export const RoundScreen = () => {
   const winner = useRoundStore((state) => state.winner);
   const answerKey = useRoundStore((state) => state.answerKey);
   const showAnswer = useRoundStore((state) => state.showAnswer);
+  const roundDurationMs = useRoundStore((state) => state.roundDurationMs);
   const setAnswerKey = useRoundStore((state) => state.setAnswerKey);
   const toggleAnswerVisibility = useRoundStore(
     (state) => state.toggleAnswerVisibility
@@ -229,7 +229,10 @@ export const RoundScreen = () => {
         ).map(([role, player]) => {
           const isActive = activePlayer === role && phase === "running";
           const hasLost = phase === "complete" && winner !== role;
-          const barPercent = toPercentRemaining(player.remainingMs);
+          const barPercent = toPercentRemaining(
+            player.remainingMs,
+            player.initialMs || roundDurationMs
+          );
           return (
             <div
               key={role}

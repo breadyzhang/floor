@@ -3,11 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { PdfSlideViewer } from "@/components/PdfSlideViewer";
 import { useRoundSync } from "@/hooks/useRoundSync";
-import {
-  ROUND_DURATION_MS,
-  type PlayerRole,
-  useRoundStore,
-} from "@/state/roundStore";
+import { type PlayerRole, useRoundStore } from "@/state/roundStore";
 
 const formatMs = (value: number) => {
   const clamped = Math.max(0, Math.floor(value));
@@ -17,8 +13,8 @@ const formatMs = (value: number) => {
   return `${minutes}:${seconds.toString().padStart(2, "0")}.${tenths}`;
 };
 
-const toPercentRemaining = (value: number) =>
-  Math.max(0, Math.min(100, (value / ROUND_DURATION_MS) * 100));
+const toPercentRemaining = (value: number, total: number) =>
+  Math.max(0, Math.min(100, total > 0 ? (value / total) * 100 : 0));
 
 const playerLabels: Record<PlayerRole, string> = {
   challenger: "Challenger",
@@ -37,6 +33,7 @@ export const StageScreen = () => {
   const resumeAt = useRoundStore((state) => state.resumeAt);
   const answerKey = useRoundStore((state) => state.answerKey);
   const currentPageIndex = useRoundStore((state) => state.currentPageIndex);
+  const roundDurationMs = useRoundStore((state) => state.roundDurationMs);
 
   const [timestamp, setTimestamp] = useState(() => Date.now());
 
@@ -88,7 +85,10 @@ export const StageScreen = () => {
             >
           ).map(([role, player]) => {
             const isActive = activePlayer === role && phase === "running";
-            const barPercent = toPercentRemaining(player.remainingMs);
+            const barPercent = toPercentRemaining(
+              player.remainingMs,
+              player.initialMs || roundDurationMs
+            );
             const hasLost = phase === "complete" && winner !== role;
             return (
               <div
@@ -155,9 +155,9 @@ export const StageScreen = () => {
               {players[winner].name} wins the round!
             </div>
           )}
-          {phase === "passDelay" && resumeAt && (
+          {phase === "passDelay" && resumeAt && answerKey.length > 0 && (
             <div className="mt-2 text-center text-base font-semibold text-rose-200">
-              {answerKey[currentPageIndex] ?? "—"}
+              Answer: {answerKey[currentPageIndex] ?? "—"}
             </div>
           )}
         </main>

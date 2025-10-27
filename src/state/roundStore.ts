@@ -12,6 +12,7 @@ export interface TopicSelection {
 export interface PlayerState {
   name: string;
   remainingMs: number;
+  initialMs: number;
   switchesUsed: number;
 }
 
@@ -28,6 +29,8 @@ export interface RoundState {
   resumeAt: number | null;
   lastTickAt: number | null;
   answerKey: string[];
+  showAnswer: boolean;
+  roundDurationMs: number;
   winner: PlayerRole | null;
 }
 
@@ -36,6 +39,7 @@ export interface RoundActions {
     challengerName: string;
     challengeeName: string;
     topic: TopicSelection;
+    roundDurationMs?: number;
   }) => void;
   setAnswerKey: (answers: string[]) => void;
   toggleAnswerVisibility: () => void;
@@ -50,19 +54,23 @@ export interface RoundActions {
   resetRound: () => void;
 }
 
-export const ROUND_DURATION_MS = 45_000;
+export const DEFAULT_ROUND_DURATION_MS = 45_000;
 export const PASS_PENALTY_MS = 3_000;
 export const MAX_SWITCHES_PER_PLAYER = 3;
 
-const initialPlayers = (): Record<PlayerRole, PlayerState> => ({
+const initialPlayers = (
+  durationMs: number = DEFAULT_ROUND_DURATION_MS
+): Record<PlayerRole, PlayerState> => ({
   challenger: {
     name: "",
-    remainingMs: ROUND_DURATION_MS,
+    remainingMs: durationMs,
+    initialMs: durationMs,
     switchesUsed: 0,
   },
   challengee: {
     name: "",
-    remainingMs: ROUND_DURATION_MS,
+    remainingMs: durationMs,
+    initialMs: durationMs,
     switchesUsed: 0,
   },
 });
@@ -79,6 +87,7 @@ const initialState: RoundState = {
   lastTickAt: null,
   answerKey: [],
   showAnswer: true,
+  roundDurationMs: DEFAULT_ROUND_DURATION_MS,
   winner: null,
 };
 
@@ -148,24 +157,37 @@ export const selectRoundSnapshot = (
   resumeAt: state.resumeAt,
   lastTickAt: state.lastTickAt,
   answerKey: [...state.answerKey],
+  showAnswer: state.showAnswer,
+  roundDurationMs: state.roundDurationMs,
   winner: state.winner,
 });
 
 export const useRoundStore = create<RoundState & RoundActions>()((set, get) => ({
   ...initialState,
-  configureRound: ({ challengerName, challengeeName, topic }) => {
+  configureRound: ({
+    challengerName,
+    challengeeName,
+    topic,
+    roundDurationMs,
+  }) => {
+    const sanitizedDuration = Number.isFinite(roundDurationMs)
+      ? Math.max(1_000, Math.min(3_600_000, Math.floor(roundDurationMs!)))
+      : DEFAULT_ROUND_DURATION_MS;
+
     set(() => ({
       topic,
       players: {
-          challenger: {
-            name: challengerName,
-            remainingMs: ROUND_DURATION_MS,
-            switchesUsed: 0,
-          },
-          challengee: {
-            name: challengeeName,
-            remainingMs: ROUND_DURATION_MS,
-            switchesUsed: 0,
+        challenger: {
+          name: challengerName,
+          remainingMs: sanitizedDuration,
+          initialMs: sanitizedDuration,
+          switchesUsed: 0,
+        },
+        challengee: {
+          name: challengeeName,
+          remainingMs: sanitizedDuration,
+          initialMs: sanitizedDuration,
+          switchesUsed: 0,
         },
       },
       activePlayer: "challenger",
@@ -173,18 +195,19 @@ export const useRoundStore = create<RoundState & RoundActions>()((set, get) => (
       currentPageIndex: 0,
       pendingPageIndex: null,
       totalPages: 0,
-        resumeAt: null,
-        lastTickAt: null,
-        answerKey: [],
-        showAnswer: true,
-        winner: null,
-      }));
-    },
-    setAnswerKey: (answers) => {
-      set(() => ({
-        answerKey: [...answers],
-      }));
-    },
+      resumeAt: null,
+      lastTickAt: null,
+      answerKey: [],
+      showAnswer: true,
+      roundDurationMs: sanitizedDuration,
+      winner: null,
+    }));
+  },
+  setAnswerKey: (answers) => {
+    set(() => ({
+      answerKey: [...answers],
+    }));
+  },
     toggleAnswerVisibility: () => {
       set((state) => ({
         showAnswer: !state.showAnswer,

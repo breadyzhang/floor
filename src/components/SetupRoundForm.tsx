@@ -17,6 +17,7 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
   const [challengerName, setChallengerName] = useState("");
   const [challengeeName, setChallengeeName] = useState("");
   const [topicId, setTopicId] = useState(() => topics[0]?.id ?? "");
+  const [durationSeconds, setDurationSeconds] = useState("");
 
   const topicsById = useMemo(
     () => new Map(topics.map((topic) => [topic.id, topic])),
@@ -39,10 +40,17 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
       return;
     }
     const topic = topicsById.get(selectedTopicId)!;
+    const trimmedDuration = durationSeconds.trim();
+    const parsedSeconds = Number(trimmedDuration);
+    const roundDurationMs =
+      trimmedDuration.length > 0 && Number.isFinite(parsedSeconds)
+        ? Math.max(1, Math.min(3_600, Math.floor(parsedSeconds))) * 1000
+        : undefined;
     configureRound({
       challengerName: challengerName.trim(),
       challengeeName: challengeeName.trim(),
       topic,
+      roundDurationMs,
     });
     router.push("/round");
   };
@@ -121,6 +129,25 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
         )}
       </label>
 
+      <label className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-zinc-700">
+          Round duration (seconds)
+        </span>
+        <input
+          type="number"
+          min={1}
+          max={3600}
+          step={1}
+          value={durationSeconds}
+          onChange={(event) => setDurationSeconds(event.target.value)}
+          placeholder="45"
+          className="h-12 rounded-xl border border-zinc-200 px-4 text-base text-zinc-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+        />
+        <p className="text-xs text-zinc-500">
+          Defaults to 45 seconds if left empty or outside 1–3600.
+        </p>
+      </label>
+
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           type="button"
@@ -152,7 +179,7 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
         <code className="font-medium">J</code> next question / correct answer,{" "}
         <code className="font-medium">P</code> pass (−3s penalty),{" "}
         <code className="font-medium">S</code> switch (3 per player). Buttons on
-        the round screen trigger the same actions.
+        the round screen trigger the same actions. Press <code className="font-medium">H</code> to hide or show the host answer card.
       </aside>
     </div>
   );

@@ -20,28 +20,7 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 Each PDF page renders as a standalone question card on the round screen.
 
-### Running a round
-
-1. On the home page, type in both contestants’ names and pick a topic deck.
-2. Hit **Start Round** – you’ll land on the host control screen.
-3. (Optional) click **Launch stage display** to open `/stage` in a new window. Share only that window (or monitor) to the TV so contestants see the clocks and slide without the host controls.
-4. Control the flow with buttons or hotkeys:
-   - `J`: mark correct and advance to the next question (passes the clock)
-   - `P`: pass (−3 seconds, same player continues after a short pause)
-   - `S`: switch (current question goes to the opponent; 3 per player)
-5. The round ends automatically when a player’s clock hits zero. The stage view mirrors every update instantly via `BroadcastChannel`.
-
-### Project structure
-
-- `src/state/roundStore.ts` – shared game state (timers, deck progress, actions) powered by Zustand.
-- `src/components/SetupRoundForm.tsx` – pre-round lobby for names + deck selection.
-- `src/components/RoundScreen.tsx` – host control UI with timers, actions, answer key, and stage-launch shortcut.
-- `src/components/StageScreen.tsx` – audience-facing view that receives live updates over `BroadcastChannel`.
-- `src/components/PdfSlideViewer.tsx` – thin wrapper around `pdfjs-dist` to render PDF slides.
-
-Everything is intentionally in-memory: refreshing the page resets the round. Add persistence or additional actions later if you decide to harden it for production.
-
-### Answer keys (optional)
+### Answer keys (Recommended)
 
 Provide host-only answers by dropping a JSON file next to the PDF with the same base name. Example:
 
@@ -63,3 +42,27 @@ public/topics/math.json
 ```
 
 The host screen shows the entry aligned with the current question, while the stage display never renders or receives the answer text.
+
+
+### Running a round
+
+1. On the home page, type in both contestants’ names, set the round timer (defaults to 45 seconds), and pick a topic deck.
+2. (Recommended) click **Launch stage display** to open `/stage` in a new window. Share only that window (or monitor) to the TV so contestants see the clocks and slide without the host controls.
+3s. Hit **Start Round** – you’ll land on the host control screen. Don't show this to contestants, as it has the answers!
+
+4. Control the flow with buttons or hotkeys:
+   - `J`: mark correct and advance to the next question (passes the clock)
+   - `P`: pass (−3 seconds, same player continues after a short pause)
+   - `S`: switch (current question goes to the opponent; 3 per player)
+   - `H`: toggle the host-only answer card on/off
+5. The round ends automatically when a player’s clock hits zero. The stage view mirrors every update instantly via `BroadcastChannel`.
+
+### Project structure
+
+- `src/components/SetupRoundForm.tsx` – pre-round lobby for names + deck selection.
+- `src/state/roundStore.ts` – shared game state (timers, deck progress, actions) powered by Zustand.
+- `src/components/RoundScreen.tsx` – host control UI with timers, actions, answer key, and stage-launch shortcut.
+- `src/components/StageScreen.tsx` – audience-facing view that receives live updates over `BroadcastChannel`.
+- `src/components/PdfSlideViewer.tsx` – thin wrapper around `pdfjs-dist` to render PDF slides.
+
+Everything is intentionally in-memory: refreshing the page resets the round. Add persistence or additional actions later if you decide to harden it for production.
