@@ -143,7 +143,7 @@ export const StageScreen = () => {
         </section>
 
         <main className="flex-1">
-          <div className="mx-auto flex h-full max-w-3xl items-center justify-center rounded-3xl bg-white/90 p-4 shadow-2xl">
+          <div className="mx-auto flex h-full w-full max-w-4xl items-center justify-center rounded-3xl bg-white/90 p-4 shadow-2xl">
             <PdfSlideViewer
               filePath={topic?.filePath ?? null}
               pageIndex={currentPageIndex}
