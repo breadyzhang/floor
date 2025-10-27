@@ -176,9 +176,9 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
 
       <aside className="rounded-2xl bg-indigo-50 px-6 py-5 text-sm text-indigo-800">
         <strong className="font-semibold">Hotkeys</strong>:{" "}
-        <code className="font-medium">J</code> next question / correct answer,{" "}
-        <code className="font-medium">P</code> pass (−3s penalty),{" "}
-        <code className="font-medium">S</code> switch (3 per player). Buttons on
+        <code className="font-medium">W</code> next question / correct answer,{" "}
+        <code className="font-medium">D</code> pass (−3s penalty),{" "}
+        <code className="font-medium">A</code> switch (3 per player). Buttons on
         the round screen trigger the same actions. Press <code className="font-medium">H</code> to hide or show the host answer card.
       </aside>
     </div>

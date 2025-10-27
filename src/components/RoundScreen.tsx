@@ -294,7 +294,7 @@ export const RoundScreen = () => {
           <div className="flex flex-col gap-3 rounded-3xl bg-white/10 p-6 shadow-lg">
             <h2 className="text-lg font-semibold text-white">Host Controls</h2>
             <p className="text-xs uppercase tracking-[0.3em] text-indigo-200">
-              Keyboard: J (next), P (pass), S (switch)
+              Keyboard: W (next), D (pass), A (switch)
             </p>
             <div className="grid gap-3">
               <button

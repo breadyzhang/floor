@@ -24,15 +24,15 @@ export const useKeyboardControls = ({ enabled }: ControlConfig) => {
       }
 
       switch (event.code) {
-        case "KeyJ":
+        case "KeyW":
           event.preventDefault();
           markCorrect();
           break;
-        case "KeyP":
+        case "KeyD":
           event.preventDefault();
           passQuestion();
           break;
-        case "KeyS":
+        case "KeyA":
           event.preventDefault();
           switchTurn();
           break;

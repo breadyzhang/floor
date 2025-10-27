@@ -162,7 +162,7 @@ export const selectRoundSnapshot = (
   winner: state.winner,
 });
 
-export const useRoundStore = create<RoundState & RoundActions>()((set, get) => ({
+export const useRoundStore = create<RoundState & RoundActions>()((set) => ({
   ...initialState,
   configureRound: ({
     challengerName,

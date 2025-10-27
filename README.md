@@ -51,9 +51,9 @@ The host screen shows the entry aligned with the current question, while the sta
 3s. Hit **Start Round** – you’ll land on the host control screen. Don't show this to contestants, as it has the answers!
 
 4. Control the flow with buttons or hotkeys:
-   - `J`: mark correct and advance to the next question (passes the clock)
-   - `P`: pass (−3 seconds, same player continues after a short pause)
-   - `S`: switch (current question goes to the opponent; 3 per player)
+   - `W`: mark correct and advance to the next question (passes the clock)
+   - `D`: pass (−3 seconds, same player continues after a short pause)
+   - `A`: switch (current question goes to the opponent; 3 per player)
    - `H`: toggle the host-only answer card on/off
 5. The round ends automatically when a player’s clock hits zero. The stage view mirrors every update instantly via `BroadcastChannel`.
 
