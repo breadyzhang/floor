@@ -39,12 +39,10 @@ export const useRoundSync = (mode: SyncMode) => {
           return;
         }
         applyingRef.current = true;
-        const incomingSnapshot = mode === "stage"
-          ? {
-              ...payload.snapshot,
-              answerKey: [],
-            }
-          : payload.snapshot;
+        const incomingSnapshot =
+          mode === "stage"
+            ? payload.snapshot
+            : payload.snapshot;
         useRoundStore.getState().hydrateFromSnapshot(incomingSnapshot);
         applyingRef.current = false;
       }

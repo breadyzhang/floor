@@ -31,11 +31,12 @@ export const StageScreen = () => {
   const topic = useRoundStore((state) => state.topic);
   const players = useRoundStore((state) => state.players);
   const activePlayer = useRoundStore((state) => state.activePlayer);
-  const currentPageIndex = useRoundStore((state) => state.currentPageIndex);
   const totalPages = useRoundStore((state) => state.totalPages);
   const winner = useRoundStore((state) => state.winner);
   const phase = useRoundStore((state) => state.phase);
   const resumeAt = useRoundStore((state) => state.resumeAt);
+  const answerKey = useRoundStore((state) => state.answerKey);
+  const currentPageIndex = useRoundStore((state) => state.currentPageIndex);
 
   const [timestamp, setTimestamp] = useState(() => Date.now());
 
@@ -152,6 +153,11 @@ export const StageScreen = () => {
           {phase === "complete" && winner && (
             <div className="mt-2 text-center text-base font-semibold text-emerald-300">
               {players[winner].name} wins the round!
+            </div>
+          )}
+          {phase === "passDelay" && resumeAt && (
+            <div className="mt-2 text-center text-base font-semibold text-rose-200">
+              {answerKey[currentPageIndex] ?? "—"}
             </div>
           )}
         </main>
