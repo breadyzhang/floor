@@ -156,7 +156,7 @@ export const StageScreen = () => {
             </div>
           )}
           {phase === "passDelay" && resumeAt && answerKey.length > 0 && (
-            <div className="mt-2 text-center text-base font-semibold text-rose-200">
+            <div className="mt-3 text-center text-2xl font-semibold text-rose-200">
               Answer: {answerKey[currentPageIndex] ?? "—"}
             </div>
           )}
