@@ -54,8 +54,9 @@ export interface RoundActions {
   resetRound: () => void;
 }
 
-export const DEFAULT_ROUND_DURATION_MS = 45_000;
+export const DEFAULT_ROUND_DURATION_MS = 60_000;
 export const PASS_PENALTY_MS = 3_000;
+export const ROUND_START_BONUS_MS = 1_000;
 export const MAX_SWITCHES_PER_PLAYER = 3;
 
 const initialPlayers = (
@@ -174,19 +175,22 @@ export const useRoundStore = create<RoundState & RoundActions>()((set) => ({
       ? Math.max(1_000, Math.min(3_600_000, Math.floor(roundDurationMs!)))
       : DEFAULT_ROUND_DURATION_MS;
 
+    const challengerInitialMs = sanitizedDuration + ROUND_START_BONUS_MS;
+    const challengeeInitialMs = sanitizedDuration;
+
     set(() => ({
       topic,
       players: {
         challenger: {
           name: challengerName,
-          remainingMs: sanitizedDuration,
-          initialMs: sanitizedDuration,
+          remainingMs: challengerInitialMs,
+          initialMs: challengerInitialMs,
           switchesUsed: 0,
         },
         challengee: {
           name: challengeeName,
-          remainingMs: sanitizedDuration,
-          initialMs: sanitizedDuration,
+          remainingMs: challengeeInitialMs,
+          initialMs: challengeeInitialMs,
           switchesUsed: 0,
         },
       },

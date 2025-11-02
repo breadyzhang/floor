@@ -46,7 +46,7 @@ The host screen shows the entry aligned with the current question, while the sta
 
 ### Running a round
 
-1. On the home page, type in both contestants’ names, set the round timer (defaults to 45 seconds), and pick a topic deck.
+1. On the home page, type in both contestants’ names, set the round timer (defaults to 60 seconds), and pick a topic deck.
 2. (Recommended) click **Launch stage display** to open `/stage` in a new window. Share only that window (or monitor) to the TV so contestants see the clocks and slide without the host controls.
 3s. Hit **Start Round** – you’ll land on the host control screen. Don't show this to contestants, as it has the answers!
 

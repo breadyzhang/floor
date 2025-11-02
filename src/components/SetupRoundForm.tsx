@@ -140,11 +140,11 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
           step={1}
           value={durationSeconds}
           onChange={(event) => setDurationSeconds(event.target.value)}
-          placeholder="45"
+          placeholder="60"
           className="h-12 rounded-xl border border-zinc-200 px-4 text-base text-zinc-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
         />
         <p className="text-xs text-zinc-500">
-          Defaults to 45 seconds if left empty or outside 1–3600.
+          Defaults to 60 seconds if left empty or outside 1–3600.
         </p>
       </label>
 
