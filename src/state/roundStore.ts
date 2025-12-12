@@ -5,6 +5,7 @@ export type PlayerRole = "challenger" | "challengee";
 export interface TopicSelection {
   id: string;
   name: string;
+  folder: string;
   filePath: string; // e.g. /topics/math.pdf
   answerPath?: string;
 }

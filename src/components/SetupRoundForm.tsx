@@ -2,33 +2,72 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { TopicFolder } from "@/lib/topics";
 import type { TopicSelection } from "../state/roundStore";
 import { useRoundStore } from "../state/roundStore";
 
 interface SetupRoundFormProps {
-  topics: TopicSelection[];
+  topicFolders: TopicFolder[];
 }
 
-export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
+export const SetupRoundForm = ({ topicFolders }: SetupRoundFormProps) => {
   const router = useRouter();
   const configureRound = useRoundStore((state) => state.configureRound);
   const resetRound = useRoundStore((state) => state.resetRound);
 
   const [challengerName, setChallengerName] = useState("");
   const [challengeeName, setChallengeeName] = useState("");
+  const folderEntries = useMemo(
+    () =>
+      topicFolders.length > 0
+        ? topicFolders
+        : [{ folder: "topics", topics: [] }],
+    [topicFolders]
+  );
+  const [activeFolder, setActiveFolder] = useState(() => {
+    if (folderEntries.some((entry) => entry.folder === "topics")) {
+      return "topics";
+    }
+    return folderEntries[0]?.folder ?? "topics";
+  });
+  const topicsByFolder = useMemo(
+    () => new Map(folderEntries.map((entry) => [entry.folder, entry.topics])),
+    [folderEntries]
+  );
+  const topics = topicsByFolder.get(activeFolder) ?? [];
   const [topicId, setTopicId] = useState(() => topics[0]?.id ?? "");
   const [durationSeconds, setDurationSeconds] = useState("");
 
-  const topicsById = useMemo(
-    () => new Map(topics.map((topic) => [topic.id, topic])),
-    [topics]
-  );
+  const topicsById = useMemo(() => {
+    return new Map(topics.map((topic) => [topic.id, topic]));
+  }, [topics]);
 
   const selectedTopicId = topicsById.has(topicId) ? topicId : "";
 
   useEffect(() => {
     resetRound();
   }, [resetRound]);
+
+  useEffect(() => {
+    setActiveFolder((current) => {
+      if (topicsByFolder.has(current)) {
+        return current;
+      }
+      if (topicsByFolder.has("topics")) {
+        return "topics";
+      }
+      return folderEntries[0]?.folder ?? "topics";
+    });
+  }, [folderEntries, topicsByFolder]);
+
+  useEffect(() => {
+    setTopicId((previous) => {
+      if (topicsById.has(previous)) {
+        return previous;
+      }
+      return topics[0]?.id ?? "";
+    });
+  }, [topics, topicsById]);
 
   const canStart =
     challengerName.trim().length > 0 &&
@@ -66,11 +105,9 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
         </h1>
         <p className="text-base text-zinc-600">
           Enter each contestant and pick a topic deck (PDF exported from your
-          slides). You can add new decks to{" "}
-          <code className="rounded bg-zinc-100 px-2 py-1 text-sm">
-            public/topics
-          </code>{" "}
-          at any time.
+          slides). Drop decks anywhere under{" "}
+          <code className="rounded bg-zinc-100 px-2 py-1 text-sm">public/</code>{" "}
+          and select the folder below.
         </p>
       </header>
 
@@ -104,7 +141,27 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
 
       <label className="flex flex-col gap-2">
         <span className="text-sm font-medium text-zinc-700">
-          Topic Deck (PDF in <code>public/topics</code>)
+          Topic folder (inside <code>public/</code>)
+        </span>
+        <select
+          value={activeFolder}
+          onChange={(event) => setActiveFolder(event.target.value)}
+          className="h-12 rounded-xl border border-zinc-200 px-4 text-base text-zinc-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+        >
+          {folderEntries.map((entry) => (
+            <option key={entry.folder} value={entry.folder}>
+              {entry.folder}{" "}
+              {entry.topics.length > 0
+                ? `(${entry.topics.length} decks)`
+                : "(empty)"}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="flex flex-col gap-2">
+        <span className="text-sm font-medium text-zinc-700">
+          Topic Deck (PDF in <code>public/{activeFolder}</code>)
         </span>
         <select
           value={selectedTopicId}
@@ -123,8 +180,8 @@ export const SetupRoundForm = ({ topics }: SetupRoundFormProps) => {
         </select>
         {topics.length === 0 && (
           <p className="text-sm text-amber-600">
-            Drop exported PDF decks into <code>public/topics</code> and refresh
-            this page.
+            Drop exported PDF decks into{" "}
+            <code>public/{activeFolder}</code> and refresh this page.
           </p>
         )}
       </label>
